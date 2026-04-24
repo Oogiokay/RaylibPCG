@@ -51,13 +51,13 @@ void PCG::TileMap::CreateMap(int weight) {
 // void SetTile(int x, int y, TileType tileType)
 // set a tile in our tileMap array, using the input x and y coordinates, and the type of tile we want to set it to (tileType)
 // ============================================= 
-
 void PCG::TileMap::SetTile(int x, int y, TileType tileType)
 {
     if (x >= 0 && x < MAP_COLUMNS && y >= 0 && y < MAP_ROWS) {
         tileArray[y][x] = tileType;
     }
 }
+
 // ============================================= 
 // Color PCG_GetTileColor(TileType tileType)
 // Return a colour based on the type type input

@@ -62,13 +62,4 @@ namespace PCG {
     private:
         TileType tileArray[MAP_ROWS][MAP_COLUMNS] = { PCG::TileType::TILE_TYPE_ROCK }; //2D array to hold tile types for the map
     };
-
-    // Helpers
-
-
-
-// Declare UI drawing function
-
-
-
 }
