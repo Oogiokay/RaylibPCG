@@ -2,7 +2,9 @@
 #include <stdio.h>
 #include <fstream>
 #include <iostream>
-
+// Required to call Raylib gui buttons. Add this near the top of PCG.c
+#define RAYGUI_IMPLEMENTATION
+#include "raygui.h" 
 
 PCG::TileMap::TileMap() {
     // Initialise our tileMap array to all grass tiles by default when we create a new TileMap object. 
@@ -188,17 +190,39 @@ void PCG::TileMap::SaveMapImage(const char* filename) const {
 }
 
 
-// Required to call Raylib gui buttons. Add this near the top of PCG.c
-#define RAYGUI_IMPLEMENTATION
-#include "raygui.h" 
+
 
 // ============================================= 
 // void PCG_DrawGUI(TileType tileArray[MAP_ROWS][MAP_COLUMNS])
 // ============================================= 
+
+void PCG::SliderQuickSetup(float offset, char *sliderName, float *sliderValue) {
+
+    Rectangle MainShape = { PCG::BUTTON_X, PCG::BUTTON_Y - 240 - offset, PCG::BUTTON_WIDTH, 20};
+    Rectangle TextBoxOffset = { PCG::BUTTON_X, PCG::BUTTON_Y - 270 - offset, PCG::BUTTON_WIDTH, 20};
+    Rectangle ValueBoxOffset = {PCG::BUTTON_X - 25, PCG::BUTTON_Y - 240 - offset, 20, 20};
+    
+    int rounded = std::round(*sliderValue);
+
+    if (GuiSlider(MainShape, NULL, NULL, sliderValue, 1, 10)) {
+        
+        printf("THE FREAKING SLIDER IS %i\n", (rounded));
+
+        GuiValueBox(ValueBoxOffset, NULL, &rounded, 0, 10, false);
+    }
+   
+
+    GuiValueBox(ValueBoxOffset, NULL, &rounded, 0, 10, false);
+
+    GuiTextBox(TextBoxOffset, sliderName, 128, false);
+}
+
+float thingy;
+
 void PCG::TileMap::DrawGUI() {
-    // Reset Button
+    
     if (GuiButton(RESET_BUTTON_BOUNDS, "Reset Map")) {
-        CreateMap(1);
+        CreateMap(std::round(thingy));
     }
 
     // Save Data Button
@@ -218,4 +242,8 @@ void PCG::TileMap::DrawGUI() {
     if (GuiButton(imgRect, "Save Map PNG")) {
         SaveMapImage(MAP_IMAGE_FILENAME);
     }
+
+    // Slider Thingy
+    SliderQuickSetup(0, "The Seed", &thingy);
+
 }

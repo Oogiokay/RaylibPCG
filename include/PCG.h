@@ -3,6 +3,7 @@
 #include "raylib.h"
 
 namespace PCG {
+   // Constants
 
     // Screen & Map Dimensions
     constexpr int SCREEN_WIDTH = 1024;
@@ -38,6 +39,34 @@ namespace PCG {
     constexpr char* MAP_TEXT_FILENAME = "pcg_map_data.txt";
     constexpr char* MAP_IMAGE_FILENAME = "pcg_map.png";
 
+    // NEW Polymorphic Base Class
+    
+
+    // Pure Virtual Base Class
+    
+    //class MapGenerator {
+    //public:
+    //    virtual ~MapGenerator() = default;  // virtual destructor
+
+    //        // This enforces that every child class MUST write their own Generate function.
+    //    virtual void Generate(TileType _tileArray[MAP_ROWS][MAP_COLUMNS]) = 0;
+    //};
+
+
+    //class RandomMapGenerator : public MapGenerator {
+    //public:
+    //    RandomMapGenerator();
+    //    ~RandomMapGenerator();
+    //    void Generate(TileType _tileArray[MAP_ROWS][MAP_COLUMNS]) override;
+    //};
+
+    //class NoiseMapGenerator : public MapGenerator {
+    //public:
+    //    NoiseMapGenerator();
+    //    ~NoiseMapGenerator();
+    //    void Generate(TileType _tileArray[MAP_ROWS][MAP_COLUMNS]) override;
+    //};
+
     class TileMap {
     public:
         TileMap();  // constructor
@@ -62,4 +91,7 @@ namespace PCG {
     private:
         TileType tileArray[MAP_ROWS][MAP_COLUMNS] = { PCG::TileType::TILE_TYPE_ROCK }; //2D array to hold tile types for the map
     };
+
+    void SliderQuickSetup(float offset, char* sliderName, float* sliderValue);
+
 }
