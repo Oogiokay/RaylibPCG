@@ -18,10 +18,10 @@
     <ClInclude Include="include\PCG.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\resource_dir.h">
+    <ClInclude Include="include\raygui.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\raygui.h">
+    <ClInclude Include="include\resource_dir.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

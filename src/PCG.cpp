@@ -15,6 +15,9 @@ PCG::TileMap::TileMap() {
             tileArray[y][x] = TILE_TYPE_GRASS;
         }
     }
+
+    // initialise the mapGenerator to null
+    mapGenerator = nullptr;
 }
 
 
@@ -23,14 +26,15 @@ PCG::TileMap::TileMap() {
 // =============================================
 PCG::TileMap::~TileMap()
 {
-
-
+    if (mapGenerator != nullptr)
+    {
+        delete mapGenerator;
+        mapGenerator = nullptr;
+    }
 }
 
-
-
 // ============================================= 
-// void PCG_CreateMap(TileType _tileArray[MAP_ROWS][MAP_COLUMNS])
+// void CreateMap()
 // ============================================= 
 void PCG::TileMap::CreateMap(int weight) {
     for (int y = 0; y < MAP_ROWS; y++) {
@@ -48,6 +52,7 @@ void PCG::TileMap::CreateMap(int weight) {
         }
     }
 }
+
 
 // ============================================= 
 // void SetTile(int x, int y, TileType tileType)
@@ -222,7 +227,8 @@ float thingy;
 void PCG::TileMap::DrawGUI() {
     
     if (GuiButton(RESET_BUTTON_BOUNDS, "Reset Map")) {
-        CreateMap(std::round(thingy));
+
+        GetMapGenerator()->Generate(tileArray);
     }
 
     // Save Data Button
@@ -245,5 +251,93 @@ void PCG::TileMap::DrawGUI() {
 
     // Slider Thingy
     SliderQuickSetup(0, "The Seed", &thingy);
+}
 
+// =============================================
+// SetMapGenerator and GetMapGenerator functions for our TileMap class, to allow us to assign a map generator to our tilemap, and retrieve it when we want to generate new maps.
+// =============================================
+void PCG::TileMap::SetMapGenerator(PCG::MapGenerator* generator) {
+    mapGenerator = generator;
+}
+
+// =============================================
+// GetMapGenerator returns a pointer to the current map generator assigned to this tilemap, so we can call its Generate function when we want to create new maps.
+// =============================================
+PCG::MapGenerator* PCG::TileMap::GetMapGenerator() const {
+    return mapGenerator;
+}
+
+
+// =============================================
+// MapGenerator
+// =============================================
+// As it is a pure virtual class, we don't need to implement anything here. The derived classes will provide the actual generation logic.
+
+
+// Derived classes will implement the Generate function to create different types of maps.
+// =============================================
+// RandomMapGenerator
+// =============================================
+// Constructor
+PCG::RandomMapGenerator::RandomMapGenerator() {
+    // nothing to initialize for now, but you could seed a random generator here if you want reproducible maps
+}
+
+// Destructor
+PCG::RandomMapGenerator::~RandomMapGenerator() {
+    // nothing to clean up for now, but if you had allocated resources (like noise generators) you would release them here
+}
+
+void PCG::RandomMapGenerator::Generate(TileType _tileArray[MAP_ROWS][MAP_COLUMNS]) {
+    for (int y = 0; y < MAP_ROWS; y++) {
+        for (int x = 0; x < MAP_COLUMNS; x++) {
+            _tileArray[y][x] = (TileType)GetRandomValue(0, TILE_COUNT - 1);
+        }
+    }
+}
+
+
+
+// =============================================
+// NoiseGenerator
+// =============================================
+// Constructor
+PCG::NoiseMapGenerator::NoiseMapGenerator() {
+    // nothing to initialize for now, but you could seed a random noise here if you want reproducible maps
+}
+
+// Destructor
+PCG::NoiseMapGenerator::~NoiseMapGenerator() {
+    // nothing to clean up for now, but if you had allocated resources (like noise generators) you would release them here
+}
+
+void PCG::NoiseMapGenerator::Generate(TileType _tileArray[MAP_ROWS][MAP_COLUMNS]) {
+    // Random offsets make the map different every time
+    int offsetX = GetRandomValue(0, 1000);
+    int offsetY = GetRandomValue(0, 1000);
+    float scale = 2.5f;
+
+
+    // Raylib's Perlin Noise function
+    Image noiseImg = GenImagePerlinNoise(MAP_COLUMNS, MAP_ROWS, offsetX, offsetY, scale);
+
+
+    for (int y = 0; y < MAP_ROWS; y++) {
+        for (int x = 0; x < MAP_COLUMNS; x++) {
+            // Read the brightness of the noise pixel
+            Color col = GetImageColor(noiseImg, x, y);
+            float brightness = (col.r + col.g + col.b) / (3.0f * 255.0f);
+
+            // Threshold: Dark spots are Rock, Light spots are Grass
+            if (brightness < 0.5f) {
+                _tileArray[y][x] = TILE_TYPE_ROCK;
+            }
+            else {
+                _tileArray[y][x] = TILE_TYPE_GRASS;
+            }
+        }
+    }
+
+
+    UnloadImage(noiseImg);
 }

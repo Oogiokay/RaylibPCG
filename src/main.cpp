@@ -11,7 +11,9 @@ int main() {
     // Create the tile map
     PCG::TileMap tileMap;
 
-    tileMap.CreateMap(1);
+    tileMap.SetMapGenerator(new PCG::NoiseMapGenerator());
+    tileMap.GetMapGenerator()->Generate(tileMap.tileArray); // Generate the map using the selected generator
+
     // Save text and image
     /*PCG_SaveMapData(tileArray, MAP_TEXT_FILENAME);
     PCG_SaveMapImage(tileArray, MAP_IMAGE_FILENAME);*/

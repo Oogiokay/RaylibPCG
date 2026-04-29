@@ -8,7 +8,7 @@ namespace PCG {
     // Screen & Map Dimensions
     constexpr int SCREEN_WIDTH = 1024;
     constexpr int SCREEN_HEIGHT = 1024;
-    constexpr int TILE_SIZE = 64;
+    constexpr int TILE_SIZE = 4;
     constexpr int MAP_COLUMNS = (SCREEN_WIDTH / TILE_SIZE);
     constexpr int MAP_ROWS = (SCREEN_HEIGHT / TILE_SIZE);
 
@@ -44,28 +44,28 @@ namespace PCG {
 
     // Pure Virtual Base Class
     
-    //class MapGenerator {
-    //public:
-    //    virtual ~MapGenerator() = default;  // virtual destructor
+    class MapGenerator {
+    public:
+        virtual ~MapGenerator() = default;  // virtual destructor
 
-    //        // This enforces that every child class MUST write their own Generate function.
-    //    virtual void Generate(TileType _tileArray[MAP_ROWS][MAP_COLUMNS]) = 0;
-    //};
+            // This enforces that every child class MUST write their own Generate function.
+        virtual void Generate(TileType _tileArray[MAP_ROWS][MAP_COLUMNS]) = 0;
+    };
 
 
-    //class RandomMapGenerator : public MapGenerator {
-    //public:
-    //    RandomMapGenerator();
-    //    ~RandomMapGenerator();
-    //    void Generate(TileType _tileArray[MAP_ROWS][MAP_COLUMNS]) override;
-    //};
+    class RandomMapGenerator : public MapGenerator {
+    public:
+        RandomMapGenerator();
+        ~RandomMapGenerator();
+        void Generate(TileType _tileArray[MAP_ROWS][MAP_COLUMNS]) override;
+    };
 
-    //class NoiseMapGenerator : public MapGenerator {
-    //public:
-    //    NoiseMapGenerator();
-    //    ~NoiseMapGenerator();
-    //    void Generate(TileType _tileArray[MAP_ROWS][MAP_COLUMNS]) override;
-    //};
+    class NoiseMapGenerator : public MapGenerator {
+    public:
+        NoiseMapGenerator();
+        ~NoiseMapGenerator();
+        void Generate(TileType _tileArray[MAP_ROWS][MAP_COLUMNS]) override;
+    };
 
     class TileMap {
     public:
@@ -88,8 +88,16 @@ namespace PCG {
         Color GetTileColor(TileType tileType) const;
         char GetTileChar(TileType tileType) const;
         
-    private:
+
+        //Getter / Setter for map generator
+        void SetMapGenerator(MapGenerator* generator);
+        MapGenerator* GetMapGenerator() const;
+
         TileType tileArray[MAP_ROWS][MAP_COLUMNS] = { PCG::TileType::TILE_TYPE_ROCK }; //2D array to hold tile types for the map
+
+    private:
+
+        MapGenerator* mapGenerator;
     };
 
     void SliderQuickSetup(float offset, char* sliderName, float* sliderValue);
