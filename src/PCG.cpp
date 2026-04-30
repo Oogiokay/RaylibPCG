@@ -6,6 +6,7 @@
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h" 
 
+
 PCG::TileMap::TileMap() {
     // Initialise our tileMap array to all grass tiles by default when we create a new TileMap object. 
     // We can change this later using the CreateMap() function, or by setting individual tiles with SetTile().
@@ -33,22 +34,39 @@ PCG::TileMap::~TileMap()
     }
 }
 
+
+PCG::TileSettings PCG::settings = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+PCG::TileType PCG::GetWeightedTile() {
+
+    float total = 0.0f;     //local variable initialised to track WEIGHTED TOTAL
+
+    for (int i = 0; i < TILE_COUNT; i++)       //ADDS UP THE WEIGHT
+        total += PCG::settings.weights[i];
+
+    float r = (float)GetRandomValue(0, 10000) / 10000.0f * total;   //the get random value is an integer so for rpecision it is multiplied by 10000.
+
+    float cumulative = 0.0f;
+
+    for (int i = 0; i < TILE_COUNT; i++)
+    {
+        cumulative += PCG::settings.weights[i]; //The epic weight distribution model where if t
+
+        if (r <= cumulative)
+            return (TileType)i;
+    }
+
+    return TILE_TYPE_GRASS;
+
+}
+
 // ============================================= 
 // void CreateMap()
 // ============================================= 
-void PCG::TileMap::CreateMap(int weight) {
+void PCG::TileMap::CreateMap() {
     for (int y = 0; y < MAP_ROWS; y++) {
         for (int x = 0; x < MAP_COLUMNS; x++) {
-            int weightedChance = GetRandomValue(0, weight);
-
-            if (weightedChance == 1)
-            {
-                tileArray[y][x] = (TileType)0;
-            }
-            else
-            {
-                tileArray[y][x] = (TileType)1;
-            }
+            tileArray[y][x] = GetWeightedTile();
         }
     }
 }
@@ -73,6 +91,8 @@ Color PCG::TileMap::GetTileColor(TileType tileType) const {
     switch (tileType) {
     case PCG::TileType::TILE_TYPE_GRASS: return GRASS_COLOR;
     case TILE_TYPE_ROCK: return ROCK_COLOR;
+    case TILE_TYPE_SAND: return SAND_COLOR;
+    case TILE_TYPE_LAVA: return LAVA_COLOR;
     default: return UNKNOWN_COLOR;
     }
 }
@@ -106,6 +126,8 @@ char PCG::TileMap::GetTileChar(TileType tileType) const {
     switch (tileType) {
     case TILE_TYPE_GRASS: return GRASS_CHAR;
     case TILE_TYPE_ROCK: return ROCK_CHAR;
+    case TILE_TYPE_SAND: return SAND_CHAR;
+    case TILE_TYPE_LAVA: return LAVA_CHAR;
     default: return '?';
     }
 }
@@ -167,6 +189,12 @@ void PCG::TileMap::LoadMapData(const char* _filename) {
             else if (ch == PCG::ROCK_CHAR) {
                 tileArray[y][x] = PCG::TileType::TILE_TYPE_ROCK;
             }
+            else if (ch == PCG::SAND_CHAR){
+                tileArray[y][x] = PCG::TileType::TILE_TYPE_SAND;
+            }
+            else if (ch == PCG::LAVA_CHAR){
+                tileArray[y][x] = PCG::TileType::TILE_TYPE_LAVA;
+            }
         }
     }
     //fclose(file); // old C-style file close
@@ -201,28 +229,20 @@ void PCG::TileMap::SaveMapImage(const char* filename) const {
 // void PCG_DrawGUI(TileType tileArray[MAP_ROWS][MAP_COLUMNS])
 // ============================================= 
 
-void PCG::SliderQuickSetup(float offset, char *sliderName, float *sliderValue) {
+void PCG::SliderQuickSetup(float offset, const char *sliderName, float *sliderValue) {
 
     Rectangle MainShape = { PCG::BUTTON_X, PCG::BUTTON_Y - 240 - offset, PCG::BUTTON_WIDTH, 20};
-    Rectangle TextBoxOffset = { PCG::BUTTON_X, PCG::BUTTON_Y - 270 - offset, PCG::BUTTON_WIDTH, 20};
-    Rectangle ValueBoxOffset = {PCG::BUTTON_X - 25, PCG::BUTTON_Y - 240 - offset, 20, 20};
+    Rectangle ValueBoxOffset = {PCG::BUTTON_X - 65, PCG::BUTTON_Y - 240 - offset, 20, 20};
     
+    GuiSlider(MainShape, sliderName, NULL, sliderValue, 1, 100);
+
     int rounded = std::round(*sliderValue);
-
-    if (GuiSlider(MainShape, NULL, NULL, sliderValue, 1, 10)) {
-        
-        printf("THE FREAKING SLIDER IS %i\n", (rounded));
-
-        GuiValueBox(ValueBoxOffset, NULL, &rounded, 0, 10, false);
-    }
-   
-
+          
     GuiValueBox(ValueBoxOffset, NULL, &rounded, 0, 10, false);
 
-    GuiTextBox(TextBoxOffset, sliderName, 128, false);
 }
 
-float thingy;
+
 
 void PCG::TileMap::DrawGUI() {
     
@@ -249,8 +269,10 @@ void PCG::TileMap::DrawGUI() {
         SaveMapImage(MAP_IMAGE_FILENAME);
     }
 
-    // Slider Thingy
-    SliderQuickSetup(0, "The Seed", &thingy);
+    PCG::SliderQuickSetup(80, "Grass", &PCG::settings.weights[TILE_TYPE_GRASS]);
+    PCG::SliderQuickSetup(120, "Rock", &PCG::settings.weights[TILE_TYPE_ROCK]);
+    PCG::SliderQuickSetup(160, "Sand", &PCG::settings.weights[TILE_TYPE_SAND]);
+    PCG::SliderQuickSetup(200, "LAVA", &PCG::settings.weights[TILE_TYPE_LAVA]);
 }
 
 // =============================================
@@ -289,9 +311,10 @@ PCG::RandomMapGenerator::~RandomMapGenerator() {
 }
 
 void PCG::RandomMapGenerator::Generate(TileType _tileArray[MAP_ROWS][MAP_COLUMNS]) {
+
     for (int y = 0; y < MAP_ROWS; y++) {
         for (int x = 0; x < MAP_COLUMNS; x++) {
-            _tileArray[y][x] = (TileType)GetRandomValue(0, TILE_COUNT - 1);
+            _tileArray[y][x] = GetWeightedTile();
         }
     }
 }
@@ -316,10 +339,16 @@ void PCG::NoiseMapGenerator::Generate(TileType _tileArray[MAP_ROWS][MAP_COLUMNS]
     int offsetX = GetRandomValue(0, 1000);
     int offsetY = GetRandomValue(0, 1000);
     float scale = 2.5f;
+    float total = 0.0f;
+
+    for (int i = 0; i < TILE_COUNT; i++) {
+        total += settings.weights[i];
+    }
 
 
     // Raylib's Perlin Noise function
     Image noiseImg = GenImagePerlinNoise(MAP_COLUMNS, MAP_ROWS, offsetX, offsetY, scale);
+
 
 
     for (int y = 0; y < MAP_ROWS; y++) {
@@ -328,16 +357,69 @@ void PCG::NoiseMapGenerator::Generate(TileType _tileArray[MAP_ROWS][MAP_COLUMNS]
             Color col = GetImageColor(noiseImg, x, y);
             float brightness = (col.r + col.g + col.b) / (3.0f * 255.0f);
 
-            // Threshold: Dark spots are Rock, Light spots are Grass
-            if (brightness < 0.5f) {
-                _tileArray[y][x] = TILE_TYPE_ROCK;
+            float right = (GetImageColor(noiseImg, x + 1 < MAP_COLUMNS ? x + 1 : x, y).r +
+                GetImageColor(noiseImg, x + 1 < MAP_COLUMNS ? x + 1 : x, y).g +
+                GetImageColor(noiseImg, x + 1 < MAP_COLUMNS ? x + 1 : x, y).b) / (3.0f * 255.0f);
+
+            float down = (GetImageColor(noiseImg, x, y + 1 < MAP_ROWS ? y + 1 : y).r +
+                GetImageColor(noiseImg, x, y + 1 < MAP_ROWS ? y + 1 : y).g +
+                GetImageColor(noiseImg, x, y + 1 < MAP_ROWS ? y + 1 : y).b) / (3.0f * 255.0f);
+
+            float edge = fabsf(brightness - right) + fabsf(brightness - down);
+
+            if (edge > 0.15f) // tweak threshold
+            {
+                _tileArray[y][x] = TILE_TYPE_SAND;
+                continue;
             }
-            else {
-                _tileArray[y][x] = TILE_TYPE_GRASS;
+            //// Threshold: Dark spots are Rock, Light spots are Grass
+            //if (brightness < 0.5f) {
+            //    _tileArray[y][x] = GetWeightedTile();
+            //}
+            //else {
+            //    _tileArray[y][x] = TILE_TYPE_GRASS;
+            //}
+
+            // Step 1: total weight
+
+            // Step 2: map noise (0–1) into weight range
+            float value = brightness * total;
+
+            // Step 3: pick tile using cumulative weights
+            float cumulative = 0.0f;
+            for (int i = 0; i < TILE_COUNT; i++)
+            {
+                cumulative += settings.weights[i];
+
+                if (value <= cumulative)
+                {
+                    _tileArray[y][x] = (TileType)i;
+                    break;
+                }
             }
         }
     }
 
 
     UnloadImage(noiseImg);
+}
+
+
+// Derived classes will implement the Generate function to create different types of maps.
+// =============================================
+// GameOfLifeGenerator
+// =============================================
+// Constructor
+PCG::GameOfLifeGenerator::GameOfLifeGenerator() {
+    // nothing to initialize for now, but you could seed a random generator here if you want reproducible maps
+}
+
+// Destructor
+PCG::GameOfLifeGenerator::~GameOfLifeGenerator() {
+    // nothing to clean up for now, but if you had allocated resources (like noise generators) you would release them here
+}
+
+void PCG::GameOfLifeGenerator::Generate(TileType _tileArray[MAP_ROWS][MAP_COLUMNS]) {
+
+  
 }

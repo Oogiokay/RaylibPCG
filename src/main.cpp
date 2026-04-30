@@ -4,12 +4,15 @@
 #include "raygui.h"
 
 
+
 int main() {
+
     SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
     InitWindow(PCG::SCREEN_WIDTH, PCG::SCREEN_HEIGHT, "Construct Map Editor");
 
     // Create the tile map
     PCG::TileMap tileMap;
+
 
     tileMap.SetMapGenerator(new PCG::NoiseMapGenerator());
     tileMap.GetMapGenerator()->Generate(tileMap.tileArray); // Generate the map using the selected generator
@@ -21,12 +24,14 @@ int main() {
     while (!WindowShouldClose()) {
         BeginDrawing();
         ClearBackground(BLACK);
+
         //PCG::DrawMap(tileArray); // Function from PCG.c
         tileMap.DrawMap();
         DrawText("Construct Map Editor", 20, 20, 20, WHITE);
         //PCG::DrawGUI(tileArray);
         tileMap.DrawGUI();
         EndDrawing();
+
     }
     CloseWindow();
     return 0;
