@@ -18,13 +18,14 @@ namespace PCG {
 
 // Tile Types (Using Enum for readability)
     typedef enum {
-        TILE_TYPE_GRASS = 0,
-        TILE_TYPE_ROCK = 1,
+        TILE_TYPE_FOREST = 0,
+        TILE_TYPE_PLAINS = 1,
         TILE_TYPE_SAND = 2,
-        TILE_TYPE_LAVA = 3,
+        TILE_TYPE_WATER = 3,
         TILE_COUNT  // Automatically counts total types
     } TileType;
 
+    extern float NOISE_SCALE;
 
     struct TileSettings
     {
@@ -35,15 +36,16 @@ namespace PCG {
 
     TileType GetWeightedTile();
 
+
     // Visual & Character settings
-    constexpr char GRASS_CHAR = '.';
-    constexpr char ROCK_CHAR = '#';
+    constexpr char FOREST_CHAR = '.';
+    constexpr char PLAINS_CHAR = '#';
     constexpr char SAND_CHAR = '%';
-    constexpr char LAVA_CHAR = '"';
-    constexpr Color GRASS_COLOR = { 69, 182, 156, 255 };
-    constexpr Color ROCK_COLOR = { 114, 147, 160, 255 };
-    constexpr Color SAND_COLOR = { 253, 253, 150, 255 };
-    constexpr Color LAVA_COLOR = { 250, 120, 120, 255 };
+    constexpr char WATER_CHAR = '"';
+    constexpr Color FOREST_COLOR = { 40, 54, 24, 255 };
+    constexpr Color PLAINS_COLOR = { 96, 108, 56, 255 };
+    constexpr Color SAND_COLOR = { 254, 250, 224, 255 };
+    constexpr Color WATER_COLOR = { 163, 206, 241, 255 };
     constexpr Color UNKNOWN_COLOR = WHITE;
 
 
@@ -123,13 +125,13 @@ namespace PCG {
         void SetMapGenerator(MapGenerator* generator);
         MapGenerator* GetMapGenerator() const;
 
-        TileType tileArray[MAP_ROWS][MAP_COLUMNS] = { PCG::TileType::TILE_TYPE_ROCK }; //2D array to hold tile types for the map
+        TileType tileArray[MAP_ROWS][MAP_COLUMNS] = { PCG::TileType::TILE_TYPE_PLAINS }; //2D array to hold tile types for the map
 
     private:
 
         MapGenerator* mapGenerator;
     };
 
-    void SliderQuickSetup(float offset, const char* sliderName, float* sliderValue);
+    void SliderQuickSetup(float offset, const char* sliderName, float* sliderValue, int min, int max);
 
 }

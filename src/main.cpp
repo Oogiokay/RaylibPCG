@@ -5,13 +5,13 @@
 
 
 
+    // Create the tile map
+    PCG::TileMap tileMap;
 int main() {
 
     SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
     InitWindow(PCG::SCREEN_WIDTH, PCG::SCREEN_HEIGHT, "Construct Map Editor");
 
-    // Create the tile map
-    PCG::TileMap tileMap;
 
 
     tileMap.SetMapGenerator(new PCG::NoiseMapGenerator());
@@ -31,6 +31,12 @@ int main() {
         //PCG::DrawGUI(tileArray);
         tileMap.DrawGUI();
         EndDrawing();
+
+        if (IsKeyDown(KEY_R)) // Fast map previewing PHOTOSENSITIVE SEIZURE WARNING
+        {
+            tileMap.GetMapGenerator()->Generate(tileMap.tileArray);
+        }
+
 
     }
     CloseWindow();

@@ -13,7 +13,7 @@ PCG::TileMap::TileMap() {
 
     for (int y = 0; y < MAP_ROWS; y++) {
         for (int x = 0; x < MAP_COLUMNS; x++) {
-            tileArray[y][x] = TILE_TYPE_GRASS;
+            tileArray[y][x] = TILE_TYPE_FOREST;
         }
     }
 
@@ -36,6 +36,9 @@ PCG::TileMap::~TileMap()
 
 
 PCG::TileSettings PCG::settings = { 1.0f, 1.0f, 1.0f, 1.0f };
+float PCG::NOISE_SCALE = 1;
+
+
 
 PCG::TileType PCG::GetWeightedTile() {
 
@@ -56,7 +59,7 @@ PCG::TileType PCG::GetWeightedTile() {
             return (TileType)i;
     }
 
-    return TILE_TYPE_GRASS;
+    return TILE_TYPE_FOREST;
 
 }
 
@@ -89,10 +92,10 @@ void PCG::TileMap::SetTile(int x, int y, TileType tileType)
 // ============================================= 
 Color PCG::TileMap::GetTileColor(TileType tileType) const {
     switch (tileType) {
-    case PCG::TileType::TILE_TYPE_GRASS: return GRASS_COLOR;
-    case TILE_TYPE_ROCK: return ROCK_COLOR;
+    case PCG::TileType::TILE_TYPE_FOREST: return FOREST_COLOR;
+    case TILE_TYPE_PLAINS: return PLAINS_COLOR;
     case TILE_TYPE_SAND: return SAND_COLOR;
-    case TILE_TYPE_LAVA: return LAVA_COLOR;
+    case TILE_TYPE_WATER: return WATER_COLOR;
     default: return UNKNOWN_COLOR;
     }
 }
@@ -124,10 +127,10 @@ void PCG::TileMap::PrintMap() const {
 // ============================================= 
 char PCG::TileMap::GetTileChar(TileType tileType) const {
     switch (tileType) {
-    case TILE_TYPE_GRASS: return GRASS_CHAR;
-    case TILE_TYPE_ROCK: return ROCK_CHAR;
+    case TILE_TYPE_FOREST: return FOREST_CHAR;
+    case TILE_TYPE_PLAINS: return PLAINS_CHAR;
     case TILE_TYPE_SAND: return SAND_CHAR;
-    case TILE_TYPE_LAVA: return LAVA_CHAR;
+    case TILE_TYPE_WATER: return WATER_CHAR;
     default: return '?';
     }
 }
@@ -183,17 +186,17 @@ void PCG::TileMap::LoadMapData(const char* _filename) {
                 ch = file.get(); // Get char from C++ file stream for skipping newlines
             }
 
-            if (ch == PCG::GRASS_CHAR) {
-                tileArray[y][x] = PCG::TileType::TILE_TYPE_GRASS;
+            if (ch == PCG::FOREST_CHAR) {
+                tileArray[y][x] = PCG::TileType::TILE_TYPE_FOREST;
             }
-            else if (ch == PCG::ROCK_CHAR) {
-                tileArray[y][x] = PCG::TileType::TILE_TYPE_ROCK;
+            else if (ch == PCG::PLAINS_CHAR) {
+                tileArray[y][x] = PCG::TileType::TILE_TYPE_PLAINS;
             }
             else if (ch == PCG::SAND_CHAR){
                 tileArray[y][x] = PCG::TileType::TILE_TYPE_SAND;
             }
-            else if (ch == PCG::LAVA_CHAR){
-                tileArray[y][x] = PCG::TileType::TILE_TYPE_LAVA;
+            else if (ch == PCG::WATER_CHAR){
+                tileArray[y][x] = PCG::TileType::TILE_TYPE_WATER;
             }
         }
     }
@@ -229,13 +232,14 @@ void PCG::TileMap::SaveMapImage(const char* filename) const {
 // void PCG_DrawGUI(TileType tileArray[MAP_ROWS][MAP_COLUMNS])
 // ============================================= 
 
-void PCG::SliderQuickSetup(float offset, const char *sliderName, float *sliderValue) {
+void PCG::SliderQuickSetup(float offset, const char *sliderName, float *sliderValue, int min, int max) {
 
     Rectangle MainShape = { PCG::BUTTON_X, PCG::BUTTON_Y - 240 - offset, PCG::BUTTON_WIDTH, 20};
     Rectangle ValueBoxOffset = {PCG::BUTTON_X - 65, PCG::BUTTON_Y - 240 - offset, 20, 20};
     
-    GuiSlider(MainShape, sliderName, NULL, sliderValue, 1, 100);
+    if (GuiSlider(MainShape, sliderName, NULL, sliderValue, min, max)) {
 
+    }
     int rounded = std::round(*sliderValue);
           
     GuiValueBox(ValueBoxOffset, NULL, &rounded, 0, 10, false);
@@ -269,10 +273,12 @@ void PCG::TileMap::DrawGUI() {
         SaveMapImage(MAP_IMAGE_FILENAME);
     }
 
-    PCG::SliderQuickSetup(80, "Grass", &PCG::settings.weights[TILE_TYPE_GRASS]);
-    PCG::SliderQuickSetup(120, "Rock", &PCG::settings.weights[TILE_TYPE_ROCK]);
-    PCG::SliderQuickSetup(160, "Sand", &PCG::settings.weights[TILE_TYPE_SAND]);
-    PCG::SliderQuickSetup(200, "LAVA", &PCG::settings.weights[TILE_TYPE_LAVA]);
+    PCG::SliderQuickSetup(80, "Forest", &PCG::settings.weights[TILE_TYPE_FOREST], 1, 100);
+    PCG::SliderQuickSetup(120, "Plains", &PCG::settings.weights[TILE_TYPE_PLAINS], 1, 100);
+    PCG::SliderQuickSetup(160, "Sand", &PCG::settings.weights[TILE_TYPE_SAND], 1, 100);
+    PCG::SliderQuickSetup(200, "Water", &PCG::settings.weights[TILE_TYPE_WATER], 1, 100);
+    PCG::SliderQuickSetup(280, "Scale", &PCG::NOISE_SCALE, 1, 8);
+
 }
 
 // =============================================
@@ -338,9 +344,10 @@ void PCG::NoiseMapGenerator::Generate(TileType _tileArray[MAP_ROWS][MAP_COLUMNS]
     // Random offsets make the map different every time
     int offsetX = GetRandomValue(0, 1000);
     int offsetY = GetRandomValue(0, 1000);
-    float scale = 2.5f;
+    float scale = 2.5f * NOISE_SCALE; //Noise scalar for little islands.
     float total = 0.0f;
 
+    // Step 1: total tile weights
     for (int i = 0; i < TILE_COUNT; i++) {
         total += settings.weights[i];
     }
@@ -357,21 +364,6 @@ void PCG::NoiseMapGenerator::Generate(TileType _tileArray[MAP_ROWS][MAP_COLUMNS]
             Color col = GetImageColor(noiseImg, x, y);
             float brightness = (col.r + col.g + col.b) / (3.0f * 255.0f);
 
-            float right = (GetImageColor(noiseImg, x + 1 < MAP_COLUMNS ? x + 1 : x, y).r +
-                GetImageColor(noiseImg, x + 1 < MAP_COLUMNS ? x + 1 : x, y).g +
-                GetImageColor(noiseImg, x + 1 < MAP_COLUMNS ? x + 1 : x, y).b) / (3.0f * 255.0f);
-
-            float down = (GetImageColor(noiseImg, x, y + 1 < MAP_ROWS ? y + 1 : y).r +
-                GetImageColor(noiseImg, x, y + 1 < MAP_ROWS ? y + 1 : y).g +
-                GetImageColor(noiseImg, x, y + 1 < MAP_ROWS ? y + 1 : y).b) / (3.0f * 255.0f);
-
-            float edge = fabsf(brightness - right) + fabsf(brightness - down);
-
-            if (edge > 0.15f) // tweak threshold
-            {
-                _tileArray[y][x] = TILE_TYPE_SAND;
-                continue;
-            }
             //// Threshold: Dark spots are Rock, Light spots are Grass
             //if (brightness < 0.5f) {
             //    _tileArray[y][x] = GetWeightedTile();
@@ -379,8 +371,6 @@ void PCG::NoiseMapGenerator::Generate(TileType _tileArray[MAP_ROWS][MAP_COLUMNS]
             //else {
             //    _tileArray[y][x] = TILE_TYPE_GRASS;
             //}
-
-            // Step 1: total weight
 
             // Step 2: map noise (0–1) into weight range
             float value = brightness * total;
