@@ -15,8 +15,11 @@ int main() {
 
 
     tileMap.SetMapGenerator(new PCG::NoiseMapGenerator());
-    tileMap.GetMapGenerator()->Generate(tileMap.tileArray); // Generate the map using the selected generator
+    tileMap.GetMapGenerator()->Generate(tileMap.tileArray, false); // Generate the map using the selected generator
 
+
+
+    
     // Save text and image
     /*PCG_SaveMapData(tileArray, MAP_TEXT_FILENAME);
     PCG_SaveMapImage(tileArray, MAP_IMAGE_FILENAME);*/
@@ -34,10 +37,27 @@ int main() {
 
         if (IsKeyDown(KEY_R)) // Fast map previewing PHOTOSENSITIVE SEIZURE WARNING
         {
-            tileMap.GetMapGenerator()->Generate(tileMap.tileArray);
+            tileMap.GetMapGenerator()->Generate(tileMap.tileArray, true);
         }
 
+        if (PCG::bBulkSaving)
+        {
+            tileMap.GetMapGenerator()->Generate(tileMap.tileArray, true);
 
+            const char* filename =
+                TextFormat("%i_%s.txt",
+                    PCG::BulkSaveIndex,
+                    PCG::MAP_TEXT_FILENAME);
+
+            tileMap.SaveMapData(filename);
+
+            PCG::BulkSaveIndex++;
+
+            if (PCG::BulkSaveIndex >= 60)
+            {
+                PCG::bBulkSaving = false;
+            }
+        }
     }
     CloseWindow();
     return 0;

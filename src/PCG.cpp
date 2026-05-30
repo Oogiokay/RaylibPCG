@@ -7,6 +7,9 @@
 #include "raygui.h" 
 
 
+bool PCG::bBulkSaving = false;
+int PCG::BulkSaveIndex = 0;
+
 PCG::TileMap::TileMap() {
     // Initialise our tileMap array to all grass tiles by default when we create a new TileMap object. 
     // We can change this later using the CreateMap() function, or by setting individual tiles with SetTile().
@@ -252,7 +255,7 @@ void PCG::TileMap::DrawGUI() {
     
     if (GuiButton(RESET_BUTTON_BOUNDS, "Reset Map")) {
 
-        GetMapGenerator()->Generate(tileArray);
+        GetMapGenerator()->Generate(tileArray, false);
     }
 
     // Save Data Button
@@ -260,7 +263,15 @@ void PCG::TileMap::DrawGUI() {
     if (GuiButton(saveRect, "Save Map Data")) {
         SaveMapData(MAP_TEXT_FILENAME);
     }
-
+    
+    Rectangle saveBulkRect = { BUTTON_X, BUTTON_Y - 320, BUTTON_WIDTH, BUTTON_HEIGHT };
+    if (GuiButton(saveBulkRect, "Bulk Save Map Data")) {
+        for (size_t i = 0; i < 60; i++)
+        {
+            PCG::bBulkSaving = true;
+            PCG::BulkSaveIndex = 0;
+        }
+    }
     // Load Data Button
     Rectangle loadRect = { BUTTON_X, BUTTON_Y - 140, BUTTON_WIDTH, BUTTON_HEIGHT };
     if (GuiButton(loadRect, "Load Map Data")) {
@@ -316,7 +327,7 @@ PCG::RandomMapGenerator::~RandomMapGenerator() {
     // nothing to clean up for now, but if you had allocated resources (like noise generators) you would release them here
 }
 
-void PCG::RandomMapGenerator::Generate(TileType _tileArray[MAP_ROWS][MAP_COLUMNS]) {
+void PCG::RandomMapGenerator::Generate(TileType _tileArray[MAP_ROWS][MAP_COLUMNS], bool randomiseWeights) {
 
     for (int y = 0; y < MAP_ROWS; y++) {
         for (int x = 0; x < MAP_COLUMNS; x++) {
@@ -340,23 +351,32 @@ PCG::NoiseMapGenerator::~NoiseMapGenerator() {
     // nothing to clean up for now, but if you had allocated resources (like noise generators) you would release them here
 }
 
-void PCG::NoiseMapGenerator::Generate(TileType _tileArray[MAP_ROWS][MAP_COLUMNS]) {
+void PCG::NoiseMapGenerator::Generate(TileType _tileArray[MAP_ROWS][MAP_COLUMNS], bool randomiseWeights) {
     // Random offsets make the map different every time
     int offsetX = GetRandomValue(0, 1000);
     int offsetY = GetRandomValue(0, 1000);
     float scale = 2.5f * NOISE_SCALE; //Noise scalar for little islands.
     float total = 0.0f;
+    
 
     // Step 1: total tile weights
     for (int i = 0; i < TILE_COUNT; i++) {
         total += settings.weights[i];
     }
 
+    if (randomiseWeights)
+    {
+        PCG::settings.weights[TILE_TYPE_FOREST] = GetRandomValue(0, 100);
+        PCG::settings.weights[TILE_TYPE_PLAINS] = GetRandomValue(0, 100);
+        PCG::settings.weights[TILE_TYPE_SAND] = GetRandomValue(0, 100);
+        PCG::settings.weights[TILE_TYPE_WATER] = GetRandomValue(0, 100);
+        PCG::NOISE_SCALE = GetRandomValue(1, 6);
+    }
 
     // Raylib's Perlin Noise function
     Image noiseImg = GenImagePerlinNoise(MAP_COLUMNS, MAP_ROWS, offsetX, offsetY, scale);
 
-
+    
 
     for (int y = 0; y < MAP_ROWS; y++) {
         for (int x = 0; x < MAP_COLUMNS; x++) {
@@ -364,19 +384,12 @@ void PCG::NoiseMapGenerator::Generate(TileType _tileArray[MAP_ROWS][MAP_COLUMNS]
             Color col = GetImageColor(noiseImg, x, y);
             float brightness = (col.r + col.g + col.b) / (3.0f * 255.0f);
 
-            //// Threshold: Dark spots are Rock, Light spots are Grass
-            //if (brightness < 0.5f) {
-            //    _tileArray[y][x] = GetWeightedTile();
-            //}
-            //else {
-            //    _tileArray[y][x] = TILE_TYPE_GRASS;
-            //}
-
             // Step 2: map noise (0–1) into weight range
             float value = brightness * total;
 
             // Step 3: pick tile using cumulative weights
             float cumulative = 0.0f;
+
             for (int i = 0; i < TILE_COUNT; i++)
             {
                 cumulative += settings.weights[i];
@@ -409,7 +422,7 @@ PCG::GameOfLifeGenerator::~GameOfLifeGenerator() {
     // nothing to clean up for now, but if you had allocated resources (like noise generators) you would release them here
 }
 
-void PCG::GameOfLifeGenerator::Generate(TileType _tileArray[MAP_ROWS][MAP_COLUMNS]) {
+void PCG::GameOfLifeGenerator::Generate(TileType _tileArray[MAP_ROWS][MAP_COLUMNS], bool randomiseWeights) {
 
   
 }

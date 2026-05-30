@@ -14,7 +14,8 @@ namespace PCG {
     constexpr int MAP_COLUMNS = (SCREEN_WIDTH / TILE_SIZE);
     constexpr int MAP_ROWS = (SCREEN_HEIGHT / TILE_SIZE);
     constexpr int TILE_TOTAL = (SCREEN_HEIGHT * SCREEN_HEIGHT) / TILE_SIZE;
-
+    extern bool bBulkSaving;
+    extern int BulkSaveIndex;
 
 // Tile Types (Using Enum for readability)
     typedef enum {
@@ -72,7 +73,7 @@ namespace PCG {
         virtual ~MapGenerator() = default;  // virtual destructor
 
             // This enforces that every child class MUST write their own Generate function.
-        virtual void Generate(TileType _tileArray[MAP_ROWS][MAP_COLUMNS]) = 0;
+        virtual void Generate(TileType _tileArray[MAP_ROWS][MAP_COLUMNS], bool randomiseWeights) = 0;
     };
 
 
@@ -80,21 +81,21 @@ namespace PCG {
     public:
         RandomMapGenerator();
         ~RandomMapGenerator();
-        void Generate(TileType _tileArray[MAP_ROWS][MAP_COLUMNS]) override;
+        void Generate(TileType _tileArray[MAP_ROWS][MAP_COLUMNS], bool randomiseWeights) override;
     };
 
     class NoiseMapGenerator : public MapGenerator {
     public:
         NoiseMapGenerator();
         ~NoiseMapGenerator();
-        void Generate(TileType _tileArray[MAP_ROWS][MAP_COLUMNS]) override;
+        void Generate(TileType _tileArray[MAP_ROWS][MAP_COLUMNS], bool randomiseWeights) override;
     };
 
     class GameOfLifeGenerator : public MapGenerator {
     public:
         GameOfLifeGenerator();
         ~GameOfLifeGenerator();
-        void Generate(TileType _tileArray[MAP_ROWS][MAP_COLUMNS]) override;
+        void Generate(TileType _tileArray[MAP_ROWS][MAP_COLUMNS], bool randomiseWeights) override;
     };
 
     class TileMap {
