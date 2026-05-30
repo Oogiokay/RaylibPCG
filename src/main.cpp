@@ -53,7 +53,7 @@ int main() {
 
             PCG::BulkSaveIndex++;
 
-            if (PCG::BulkSaveIndex >= 60)
+            if (PCG::BulkSaveIndex >= 600)
             {
                 PCG::bBulkSaving = false;
             }
